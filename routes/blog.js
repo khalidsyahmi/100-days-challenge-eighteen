@@ -1,4 +1,5 @@
 const express = require("express");
+const res = require("express/lib/response");
 const mongodb = require("mongodb");
 
 const db = require("../data/database");
@@ -117,8 +118,10 @@ router.post("/posts/:id/delete", async function (req, res) {
 // comment GET request
 router.get("/posts/:id/comments", async function (req, res) {
   const postId = new ObjectId(req.params.id);
-  //template is no longer needed // the page necessary is already loaded
+  //template is no longer needed
+  //the page necessary is already loaded
   /* const post = await db.getDb().collection("posts").findOne({ _id: postId }); */
+  //only load the comment section
   const comments = await db
     .getDb()
     .collection("comments")
@@ -127,6 +130,7 @@ router.get("/posts/:id/comments", async function (req, res) {
 
   /*  return res.render("post-detail", { post: post, comments: comments }); */
   res.json(comments);
+  //res.status(500).json({ message: "comment not fetched!" });
 });
 
 // comment POST request
@@ -138,8 +142,10 @@ router.post("/posts/:id/comments", async function (req, res) {
     text: req.body.text,
   };
   await db.getDb().collection("comments").insertOne(newComment);
+
   /*  res.redirect("/posts/" + req.params.id); */
   res.json({ message: "comment added!" });
+  //res.status(500).json({ message: "comment failed!" });
 });
 
 module.exports = router;

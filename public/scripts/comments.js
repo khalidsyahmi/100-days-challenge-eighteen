@@ -1,7 +1,7 @@
 //getElements
 const loadCommentsElement = document.getElementById("load-comments"); //get btn dataset
 const commentSection = document.getElementById("comments"); //get comment section
-const commentForm = document.querySelector("#comments-form form");
+const commentForm = document.querySelector("#comments-form form"); // form only
 const commentTitle = document.getElementById("title");
 const commentText = document.getElementById("text");
 
@@ -32,20 +32,41 @@ async function showComment() {
   // extract btn for the dataset
   //letsavoid Uppercase data attributes here
   const postID = loadCommentsElement.dataset.postid; //no promises
-  //send get route request via fetch()
-  const postData = await fetch(`/posts/${postID}/comments`); //is promise
-  const jsonData = await postData.json(); //is promise //decode json to js
-  console.log(jsonData);
 
-  //pass data to the created JS to HTML element
-  const createdComment = createComment(jsonData);
-  //wipe everything in the comment section tag
-  commentSection.innerHTML = "";
-  //finally update the blank comment section with the appended createdComment()
-  commentSection.appendChild(createdComment);
+  //connection error
+  try {
+    //send get route request via fetch()
+    const response = await fetch(`/posts/${postID}/comments`); //is promise
+    //technical error
+    if (!response.ok) {
+      alert("cannot fetch comments");
+      return;
+    } else {
+      const jsonData = await response.json(); //is promise //decode json to js
+      //console.log(jsonData);
+
+      //falsy
+      //also try truthy handling
+      if (!jsonData || jsonData.length === 0) {
+        commentSection.firstElementChild.textContent =
+          "There are still no comments available! Go ahead and add new comment";
+      } else {
+        //pass data to the created JS to HTML element
+        const createdComment = createComment(jsonData);
+        //wipe everything in the comment section tag
+        commentSection.innerHTML = "";
+        //finally update the blank comment section with the appended createdComment()
+        commentSection.appendChild(createdComment);
+      }
+    }
+  } catch (err) {
+    alert("Connection to comments is lost");
+  }
 }
 
-function saveComment(event) {
+//extract form data using JavaScript
+//the POST request
+async function saveComment(event) {
   event.preventDefault();
   const formID = commentForm.dataset.formid;
 
@@ -55,13 +76,28 @@ function saveComment(event) {
 
   const commentAttribute = { title: enteredTitle, text: enteredText };
 
-  fetch(`/posts/${formID}/comments`, {
-    method: "POST",
-    body: JSON.stringify(commentAttribute),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  }); //fetch() modified into post request
+  //try catch //response didn't rach server
+  //connection error
+  try {
+    //encode into saveComment()
+    const fetchComment = await fetch(`/posts/${formID}/comments`, {
+      method: "POST",
+      body: JSON.stringify(commentAttribute),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }); //fetch() modified into post request
+
+    //technical error
+    if (fetchComment.ok) {
+      //pre-launch showComment function here
+      showComment();
+    } else {
+      alert("Could not send new comment. server crashed!");
+    }
+  } catch (err) {
+    alert("could not create comment. Connection is lost!");
+  }
 }
 
 //listeners
